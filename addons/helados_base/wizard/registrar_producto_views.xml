@@ -12,6 +12,7 @@
                         <field name="categ_id"/>
                     </group>
                     <group>
+                        <field name="standard_price"/>
                         <field name="list_price"/>
                         <field name="cantidad_inicial"/>
                     </group>

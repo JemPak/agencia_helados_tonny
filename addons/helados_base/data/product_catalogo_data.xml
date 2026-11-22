@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Catálogo inicial de la agencia. Solo se carga al instalar el módulo
+         (noupdate): los cambios que se hagan después en Odoo se conservan.
+         Columnas: código, nombre, categoría, precio de compra, precio de venta
+         (COP, entregados por la agencia) y cantidad inicial (0: se carga con un
+         ajuste de inventario cuando se haga el primer conteo). -->
+    <data noupdate="1">
+        <function model="helados.registrar.producto" name="_cargar_catalogo">
+            <value eval="[
+                ('LIT-18',  'Caja helado 18 L', 'helados_base.categoria_litro',  93979, 123585, 0),
+                ('LIT-10',  'Caja helado 10 L', 'helados_base.categoria_litro',  55158,  72555, 0),
+                ('LIT-05',  'Caja helado 5 L',  'helados_base.categoria_litro',  26349,  36500, 0),
+                ('CON-BIC', 'Biconos',          'helados_base.categoria_conos',  55862,  73312, 0),
+                ('CON-KON', 'Konito',           'helados_base.categoria_conos',  45705,  59960, 0),
+                ('CON-KMA', 'Konito Maní',      'helados_base.categoria_conos',  32871,  42058, 0),
+                ('VAS-JUN', 'Vasito Junior',    'helados_base.categoria_vasos',  21056,  26250, 0),
+                ('VAS-DER', 'Derroche',         'helados_base.categoria_vasos',  16804,  21367, 0),
+                ('VAS-GCI', 'Gran Circus',      'helados_base.categoria_vasos',   2619,   3457, 0),
+                ('GAL-GAL', 'Galletas',         'helados_base.categoria_galletas',  36195,  45980, 0),
+                ('PAL-VAL', 'Vallenitas',       'helados_base.categoria_paletas',  50784,  64776, 0),
+                ('PAL-IRI', 'Paleta Iris',      'helados_base.categoria_paletas',  22714,  29712, 0),
+                ('PAL-CHO', 'Chocomanía',       'helados_base.categoria_paletas',  42012,  53350, 0),
+                ('TUR-TUR', 'Turrones',         'helados_base.categoria_turrones',  37395,  47976, 0),
+                ('TUR-TCI', 'Turroncitos',      'helados_base.categoria_turrones',  36934,  47976, 0),
+                ('TUR-CRE', 'Cremosos',         'helados_base.categoria_turrones',  18283,  23988, 0),
+            ]"/>
+        </function>
+
+        <!-- Imágenes de referencia de heladostonny.com. No se guardan en el
+             repositorio: se descargan a la base al instalar. Las cajas de litro
+             no tienen foto en la tienda. -->
+        <function model="helados.registrar.producto" name="_descargar_imagenes">
+            <value eval="[
+                ('CON-BIC', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Bicono-EDS.jpg'),
+                ('CON-KON', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Konito.jpg'),
+                ('CON-KMA', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Konito-Mani.jpg'),
+                ('VAS-JUN', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Vasito-Junior.jpg'),
+                ('VAS-DER', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/products/Derroche_a3a2b782-3ed9-4f34-abf2-c10787313fd3.png?width=1024'),
+                ('VAS-GCI', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/products/Gran-Circus_f4af7fe3-24b8-4cd8-8ee1-5b072febb045.png?width=1024'),
+                ('GAL-GAL', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Galleta-Vainilla-x720.jpg'),
+                ('PAL-VAL', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Paleta-Va-Llenita.jpg'),
+                ('PAL-IRI', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Paleta-Iris_45e0c3b7-680b-4d7f-a3c6-e50b47030c95.jpg'),
+                ('PAL-CHO', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Paleta-Chocomania.jpg'),
+                ('TUR-TUR', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Turron-Mango-Biche.jpg'),
+                ('TUR-TCI', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Turron-Arequipe.jpg'),
+                ('TUR-CRE', 'https://cdn.shopify.com/s/files/1/0398/7885/2758/files/Turron-Cremoso-Guana_3e94b122-12a4-4512-baa1-7dc67a3b4486.jpg'),
+            ]"/>
+        </function>
+    </data>
+</odoo>

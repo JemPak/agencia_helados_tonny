@@ -1,7 +1,14 @@
+import base64
+import logging
+
+import requests
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 from ..models.product import _escapar_like
+
+_logger = logging.getLogger(__name__)
 
 
 class RegistrarProducto(models.TransientModel):
@@ -19,6 +26,10 @@ class RegistrarProducto(models.TransientModel):
         default=lambda self: self.env.ref(
             "helados_base.categoria_helados", raise_if_not_found=False
         ),
+    )
+    standard_price = fields.Float(
+        string="Precio de compra", digits="Product Price",
+        help="Lo que la agencia le paga a Helados Tonny S.A.S. por unidad.",
     )
     list_price = fields.Float(string="Precio de venta", required=True, digits="Product Price")
     cantidad_inicial = fields.Float(
@@ -42,6 +53,8 @@ class RegistrarProducto(models.TransientModel):
             errores.append(_("Ya existe un producto con el código «%s».", codigo))
         if not (self.name or "").strip():
             errores.append(_("El nombre es obligatorio."))
+        if self.standard_price < 0:
+            errores.append(_("El precio de compra no puede ser negativo."))
         if self.list_price < 0:
             errores.append(_("El precio de venta no puede ser negativo."))
         if self.cantidad_inicial < 0:
@@ -56,6 +69,7 @@ class RegistrarProducto(models.TransientModel):
             "name": self.name.strip(),
             "default_code": self.default_code.strip(),
             "categ_id": self.categ_id.id,
+            "standard_price": self.standard_price,
             "list_price": self.list_price,
             "type": "consu",
             "is_storable": True,
@@ -89,19 +103,43 @@ class RegistrarProducto(models.TransientModel):
 
     @api.model
     def _cargar_catalogo(self, filas):
-        """Registra varios productos a la vez. Lo usan los datos de demostración.
+        """Registra varios productos a la vez. Lo usa el catálogo inicial (data/).
 
-        `filas`: lista de tuplas (código, nombre, xmlid de categoría, precio, cantidad).
+        `filas`: lista de tuplas (código, nombre, xmlid de categoría,
+        precio de compra, precio de venta, cantidad).
         Omite los códigos que ya existen, para poder ejecutarse más de una vez.
         """
         Product = self.env["product.product"].with_context(active_test=False)
-        for codigo, nombre, categoria, precio, cantidad in filas:
+        for codigo, nombre, categoria, compra, venta, cantidad in filas:
             if Product.search_count([("default_code", "=", codigo)], limit=1):
                 continue
             self.create({
                 "default_code": codigo,
                 "name": nombre,
                 "categ_id": self.env.ref(categoria).id,
-                "list_price": precio,
+                "standard_price": compra,
+                "list_price": venta,
                 "cantidad_inicial": cantidad,
             })._crear_producto()
+
+    @api.model
+    def _descargar_imagenes(self, imagenes):
+        """Descarga la imagen de cada producto desde una URL y la guarda en la base.
+
+        `imagenes`: lista de tuplas (código, url). Solo pone imagen a los productos
+        que aún no tienen, para no pisar las que se carguen a mano. Si no hay
+        conexión o la descarga falla, se registra en el log y se sigue: la
+        instalación del módulo no depende de internet.
+        """
+        Product = self.env["product.product"].with_context(active_test=False)
+        for codigo, url in imagenes:
+            product = Product.search([("default_code", "=", codigo)], limit=1)
+            if not product or product.product_tmpl_id.image_1920:
+                continue
+            try:
+                respuesta = requests.get(url, timeout=15)
+                respuesta.raise_for_status()
+            except requests.RequestException as error:
+                _logger.warning("No se pudo descargar la imagen de %s (%s): %s", codigo, url, error)
+                continue
+            product.product_tmpl_id.image_1920 = base64.b64encode(respuesta.content)

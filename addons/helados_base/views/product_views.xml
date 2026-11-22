@@ -10,7 +10,8 @@
                 <field name="default_code" string="Código"/>
                 <field name="name" string="Nombre"/>
                 <field name="categ_id" string="Categoría"/>
-                <field name="list_price" string="Precio"/>
+                <field name="standard_price" string="Precio compra" optional="show"/>
+                <field name="list_price" string="Precio venta"/>
                 <field name="qty_cava" sum="Total en Cava"/>
                 <field name="qty_available" string="Total almacén" optional="hide"/>
                 <field name="uom_id" string="Unidad" optional="show"/>

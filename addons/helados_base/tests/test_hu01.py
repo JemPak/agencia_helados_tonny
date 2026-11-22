@@ -118,3 +118,24 @@ class TestHU01(TransactionCase):
         accion = self.env.ref("helados_base.action_catalogo_cava")
         productos = self.env["product.product"].search(safe_eval(accion.domain))
         self.assertIn("TEST-001", productos.mapped("default_code"))
+
+    # --- Catálogo inicial ----------------------------------------------------
+
+    def test_catalogo_inicial(self):
+        """Los 16 productos de la agencia quedan cargados, con categoría y sin duplicados."""
+        catalogo = self.env["product.product"].search([
+            ("categ_id", "child_of", self.env.ref("helados_base.categoria_helados").id),
+            ("default_code", "not like", "TEST-%"),
+        ])
+        self.assertEqual(len(catalogo), 16)
+        self.assertIn("Konito Maní", catalogo.mapped("name"))
+        self.assertTrue(all(catalogo.mapped("is_storable")))
+
+    def test_catalogo_inicial_precios(self):
+        konito = self.env["product.product"].search([("default_code", "=", "CON-KON")])
+        self.assertEqual(konito.standard_price, 45705)
+        self.assertEqual(konito.list_price, 59960)
+
+    def test_e2_precio_compra_negativo(self):
+        with self.assertRaises(ValidationError):
+            self._registrar(standard_price=-1)

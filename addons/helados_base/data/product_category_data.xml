@@ -19,6 +19,10 @@
         <field name="name">Vasos</field>
         <field name="parent_id" ref="categoria_helados"/>
     </record>
+    <record id="categoria_turrones" model="product.category">
+        <field name="name">Turrones</field>
+        <field name="parent_id" ref="categoria_helados"/>
+    </record>
     <record id="categoria_litro" model="product.category">
         <field name="name">Helado por litro</field>
         <field name="parent_id" ref="categoria_helados"/>
