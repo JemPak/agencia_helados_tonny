@@ -79,6 +79,18 @@ class TestHU02(TransactionCase):
                 ]), 1, product.default_code,
             )
 
+    def test_min_max_desde_demanda_mensual(self):
+        """Konito: 165/mes -> 5,5 por día. Mínimo 5,5 × (3+2) = 28; máximo 5,5 × 12 = 66."""
+        template = self.konito.product_tmpl_id
+        self.assertEqual(template.demanda_mensual, 165)
+        template.action_helados_recalcular_reglas()
+        self.assertEqual((self.regla.product_min_qty, self.regla.product_max_qty), (28, 66))
+
+    def test_recalcula_al_cambiar_parametros(self):
+        self.env["ir.config_parameter"].sudo().set_param("helados_compras.dias_ciclo", 14)
+        self.konito.product_tmpl_id.action_helados_recalcular_reglas()
+        self.assertEqual((self.regla.product_min_qty, self.regla.product_max_qty), (28, 105))
+
     # --- Escenario 1: solicitud automática por stock mínimo -----------------
 
     def test_e1_solicitud_automatica_al_bajar_del_minimo(self):

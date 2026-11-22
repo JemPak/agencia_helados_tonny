@@ -1,32 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Solo al instalar: deja cada producto del catálogo listo para comprarse a
-         Helados Tonny S.A.S. (ruta Comprar + proveedor con su precio de compra)
-         y crea su regla de stock mínimo/máximo en la Cava.
-         Columnas: código, mínimo, máximo (en unidades del producto).
-         VALORES INICIALES PROPUESTOS: ajustarlos con la agencia en
-         Inventario > Configuración > Reglas de reabastecimiento. -->
+         Helados Tonny S.A.S. (proveedor con su precio de compra), carga su demanda
+         mensual y crea su regla de stock mínimo/máximo en la Cava calculada con
+         esa demanda (ver models/product.py). -->
     <data noupdate="1">
+        <record id="param_dias_mes" model="ir.config_parameter">
+            <field name="key">helados_compras.dias_mes</field>
+            <field name="value">30</field>
+        </record>
+        <record id="param_dias_entrega" model="ir.config_parameter">
+            <field name="key">helados_compras.dias_entrega</field>
+            <field name="value">3</field>
+        </record>
+        <record id="param_dias_seguridad" model="ir.config_parameter">
+            <field name="key">helados_compras.dias_seguridad</field>
+            <field name="value">2</field>
+        </record>
+        <record id="param_dias_ciclo" model="ir.config_parameter">
+            <field name="key">helados_compras.dias_ciclo</field>
+            <field name="value">7</field>
+        </record>
+
         <function model="product.template" name="_helados_configurar_compras">
             <value eval="ref('helados_compras.partner_helados_tonny')"/>
-            <value eval="[
-                ('LIT-18',  2,  6),
-                ('LIT-10',  2,  6),
-                ('LIT-05',  3, 10),
-                ('CON-BIC', 3, 10),
-                ('CON-KON', 3, 10),
-                ('CON-KMA', 3, 10),
-                ('VAS-JUN', 3, 10),
-                ('VAS-DER', 3, 10),
-                ('VAS-GCI', 20, 60),
-                ('GAL-GAL', 3, 10),
-                ('PAL-VAL', 3, 10),
-                ('PAL-IRI', 3, 10),
-                ('PAL-CHO', 3, 10),
-                ('TUR-TUR', 3, 10),
-                ('TUR-TCI', 3, 10),
-                ('TUR-CRE', 3, 10),
-            ]"/>
         </function>
     </data>
+
+    <!-- Acción "Recalcular mínimos y máximos" en la lista de productos -->
+    <record id="action_recalcular_reglas" model="ir.actions.server">
+        <field name="name">Recalcular mínimos y máximos</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">records.action_helados_recalcular_reglas()</field>
+    </record>
 </odoo>
