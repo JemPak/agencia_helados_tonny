@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pos_session_form_sobrantes" model="ir.ui.view">
+        <field name="name">pos.session.form.sobrantes</field>
+        <field name="model">pos.session</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_session_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='open_frontend_cb']" position="after">
+                <field name="requiere_devolucion" invisible="1"/>
+                <button name="action_devolver_sobrantes" type="object" string="Devolver sobrantes"
+                        class="oe_highlight" invisible="not requiere_devolucion"/>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <group string="Cierre de ruta" invisible="not sobrantes_registrados and not faltante_ids">
+                    <field name="sobrantes_registrados"/>
+                    <field name="devolucion_picking_id"/>
+                    <field name="faltante_valor"/>
+                </group>
+                <field name="faltante_ids" invisible="not faltante_ids" readonly="1">
+                    <list>
+                        <field name="product_id"/>
+                        <field name="esperado"/>
+                        <field name="devuelto"/>
+                        <field name="cantidad"/>
+                        <field name="valor"/>
+                        <field name="currency_id" column_invisible="True"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+</odoo>

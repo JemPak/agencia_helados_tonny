@@ -84,6 +84,7 @@ Luego, en **Aplicaciones**, quitar el filtro "Aplicaciones" y buscar e instalar:
 1. **Agencia de Helados – Compras** (`helados_compras`): instala también `helados_base`, Inventario, Compras y
    Contabilidad (con el plan de cuentas colombiano `l10n_co`).
 2. **Agencia de Helados – Pedidos y rutas** (`helados_ventas`): instala Ventas.
+3. **Agencia de Helados – Punto de Venta en ruta** (`helados_pos`): instala Punto de Venta.
 
 Al instalarse se carga el **catálogo inicial de la agencia** (16 productos con precio de compra y de venta).
 Las imágenes se descargan de heladostonny.com en ese momento; si no hay internet, el módulo se instala
@@ -157,14 +158,35 @@ Las cantidades iniciales quedan en 0 hasta el primer conteo de la Cava.
 | E2 – Confirmar orden de compra | *Compras → Solicitudes de presupuesto → Confirmar pedido*: pasa a orden de compra y deja la **recepción pendiente** en la Cava. |
 | E3 – Registrar recepción en la Cava | *Inventario → Recepciones → Validar*: suma a la Cava y guarda fecha, proveedor y el nuevo campo **Validado por** (usuario que recibió). Si llega menos de lo pedido, se crea una recepción pendiente por la diferencia. |
 
-Mínimos y máximos iniciales (unidades del producto). **Son una propuesta, a validar con la agencia**;
-se cambian en *Inventario → Operaciones → Reabastecimiento*:
+**Mínimos y máximos desde la demanda mensual.** Cada producto tiene el campo *Demanda mensual*
+(entregado por la agencia). Con la demanda diaria `d = demanda / 30`:
 
-| Productos | Mínimo | Máximo |
-|-----------|-------:|-------:|
-| Cajas 18 L y 10 L | 2 | 6 |
-| Gran Circus | 20 | 60 |
-| Todos los demás | 3 | 10 |
+- **Mínimo** = `d × (días de entrega + días de seguridad)` → alcanza mientras llega el pedido.
+- **Máximo** = mínimo + `d × días del ciclo de pedido` → lo que se pide cubre hasta el siguiente pedido.
+
+Los días son parámetros del sistema (*Ajustes → Técnico → Parámetros del sistema*). **Los valores por defecto
+son supuestos a validar con la agencia**: `helados_compras.dias_entrega = 3`, `dias_seguridad = 2`,
+`dias_ciclo = 7`, `dias_mes = 30`. Después de cambiar un parámetro o una demanda, seleccionar los productos y
+usar *Acciones → Recalcular mínimos y máximos*.
+
+| Código | Producto | Demanda/mes | Mínimo | Máximo |
+|--------|----------|------------:|-------:|-------:|
+| LIT-18 | Caja helado 18 L | 120 | 20 | 48 |
+| LIT-10 | Caja helado 10 L | 129 | 22 | 52 |
+| LIT-05 | Caja helado 5 L | 66 | 11 | 27 |
+| CON-BIC | Biconos | 120 | 20 | 48 |
+| CON-KON | Konito | 165 | 28 | 66 |
+| CON-KMA | Konito Maní | 105 | 18 | 42 |
+| VAS-JUN | Vasito Junior | 102 | 17 | 41 |
+| VAS-DER | Derroche | 144 | 24 | 58 |
+| VAS-GCI | Gran Circus | 180 | 30 | 72 |
+| GAL-GAL | Galletas | 105 | 18 | 42 |
+| PAL-VAL | Vallenitas | 72 | 12 | 29 |
+| PAL-IRI | Paleta Iris | 165 | 28 | 66 |
+| PAL-CHO | Chocomanía | 72 | 12 | 29 |
+| TUR-TUR | Turrones | 84 | 14 | 34 |
+| TUR-TCI | Turroncitos | 84 | 14 | 34 |
+| TUR-CRE | Cremosos | 75 | 13 | 30 |
 
 > Mientras la Cava esté en 0, el planificador diario creará una solicitud de compra con todo el catálogo.
 > Conviene hacer el primer conteo (ajuste de inventario) antes de empezar a usar Compras.
@@ -188,6 +210,32 @@ Pedido de venta ──confirmar──▶ Cargue de vehículo ──validar──
 
 Además se activó *Transferencias internas* para cargar mercancía extra a un vehículo (venta en ruta sin
 pedido) y, en la HU04, devolver los sobrantes a la Cava.
+
+### `helados_pos` – HU04 Ventas y cierre de sesión en el Punto de Venta
+
+Hay un **Punto de Venta por vehículo** (Camión, Moto 1, Moto 2) y uno para el **Local**. Cada uno vende desde
+su propia ubicación, tiene su propia caja de **Efectivo** y un **tope de diferencia al cierre de $5.000**.
+
+```
+Abrir caja (base) ─▶ Vender / cobrar pedidos ─▶ Devolver sobrantes ─▶ Contar efectivo y cerrar
+                     sale del vehículo            vehículo → Cava       esperado vs. contado
+                                                  faltantes registrados
+```
+
+| Criterio de aceptación | Implementación |
+|------------------------|----------------|
+| E1 – Abrir sesión con base de efectivo | El repartidor abre la sesión de su vehículo e ingresa la base; queda como saldo inicial de la caja. |
+| E2 – Venta, pago y factura | Cada venta descuenta **en el momento** del inventario del vehículo y registra el pago. Si tiene cliente y se marca *Factura*, genera la factura publicada. Los **pedidos a domicilio** (HU03) se cobran desde el PdV con *Pedidos de venta*: Odoo cancela la entrega pendiente y descuenta una sola vez desde el vehículo. |
+| E3 – Devolver sobrantes y cerrar | En la sesión, **Devolver sobrantes** muestra lo que debería quedar en el vehículo (cargado − vendido); el repartidor anota lo que devuelve. Lo devuelto vuelve a la Cava; **lo que falta queda registrado como faltante** (cantidad y valor) a nombre del responsable y el vehículo queda en cero. **No se puede cerrar la caja sin este paso.** Al cerrar, Odoo compara efectivo esperado vs. contado; si la diferencia supera el tope, **solo un gerente** puede cerrar (Odoo lo controlaba solo en pantalla; aquí también en el servidor). |
+
+Los faltantes se consultan en *Punto de Venta → Informes → Faltantes de ruta* (gerente).
+
+Pedidos a domicilio no entregados: al devolver sobrantes se libera su reserva en el vehículo y la entrega
+queda pendiente; para volver a salir se carga de nuevo con una transferencia interna Cava → vehículo.
+
+**No implementado (decisión):** Odoo permite vender en el PdV aunque el sistema no tenga existencias en el
+vehículo. Bloquearlo exige modificar la pantalla del PdV (JavaScript). Se dejó así porque la devolución de
+sobrantes ya detecta cualquier diferencia entre lo cargado y lo vendido.
 
 ## Pruebas
 
@@ -217,7 +265,8 @@ docker compose down -v           # ¡detener y BORRAR los datos! (ver Persistenc
 ├── addons/
 │   ├── helados_base/       # HU01: ubicaciones y catálogo (models, wizard, views, data, tests)
 │   ├── helados_compras/    # HU02: proveedor, reabastecimiento y recepciones
-│   └── helados_ventas/     # HU03: pedidos a domicilio, repartidor/vehículo y cargue
+│   ├── helados_ventas/     # HU03: pedidos a domicilio, repartidor/vehículo y cargue
+│   └── helados_pos/        # HU04: PdV por vehículo, sobrantes, faltantes y cierre de caja
 ├── config/
 │   └── odoo.conf.example   # plantilla de configuración de Odoo
 ├── scripts/
@@ -237,6 +286,6 @@ docker compose down -v           # ¡detener y BORRAR los datos! (ver Persistenc
 - [x] HU01 – Ubicaciones y catálogo de productos (`helados_base`)
 - [x] HU02 – Reglas de reabastecimiento y recepciones (`helados_compras`)
 - [x] HU03 – Pedidos a domicilio y cargue de vehículos (`helados_ventas`)
-- [ ] HU04 – Punto de Venta por vehículo y cierre de sesión
+- [x] HU04 – Punto de Venta por vehículo y cierre de sesión (`helados_pos`)
 - [ ] HU05 – Reportes para el gerente
 - [ ] Guion de pruebas de aceptación

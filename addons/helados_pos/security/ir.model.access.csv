@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_helados_faltante_user,helados.faltante usuario PdV,model_helados_faltante,point_of_sale.group_pos_user,1,0,0,0
+access_helados_faltante_manager,helados.faltante gerente PdV,model_helados_faltante,point_of_sale.group_pos_manager,1,1,1,1
+access_helados_devolucion_user,helados.devolucion.sobrantes usuario PdV,model_helados_devolucion_sobrantes,point_of_sale.group_pos_user,1,1,1,1
+access_helados_devolucion_linea_user,helados.devolucion.sobrantes.linea usuario PdV,model_helados_devolucion_sobrantes_linea,point_of_sale.group_pos_user,1,1,1,1

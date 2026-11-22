@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Solo al instalar: un Punto de Venta por vehículo (y uno para el Local),
+         cada uno con su tipo de operación (sale de su ubicación), su caja de
+         efectivo y un tope de diferencia al cierre de $5.000. -->
+    <data noupdate="1">
+        <function model="pos.config" name="_helados_configurar_puntos_venta"/>
+    </data>
+</odoo>

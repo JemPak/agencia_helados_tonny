@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="helados_faltante_list" model="ir.ui.view">
+        <field name="name">helados.faltante.list</field>
+        <field name="model">helados.faltante</field>
+        <field name="arch" type="xml">
+            <list string="Faltantes de ruta" create="false">
+                <field name="fecha"/>
+                <field name="config_id"/>
+                <field name="session_id"/>
+                <field name="repartidor_id"/>
+                <field name="product_id"/>
+                <field name="esperado"/>
+                <field name="devuelto"/>
+                <field name="cantidad"/>
+                <field name="valor" sum="Total"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="helados_faltante_search" model="ir.ui.view">
+        <field name="name">helados.faltante.search</field>
+        <field name="model">helados.faltante</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="repartidor_id"/>
+                <field name="product_id"/>
+                <field name="config_id"/>
+                <filter name="agrupar_repartidor" string="Responsable" context="{'group_by': 'repartidor_id'}"/>
+                <filter name="agrupar_pdv" string="Punto de Venta" context="{'group_by': 'config_id'}"/>
+                <filter name="agrupar_fecha" string="Fecha" context="{'group_by': 'fecha:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_helados_faltante" model="ir.actions.act_window">
+        <field name="name">Faltantes de ruta</field>
+        <field name="res_model">helados.faltante</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Sin faltantes</p>
+            <p>Aquí aparece lo que no volvió a la Cava al cerrar una ruta.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_helados_faltante"
+              name="Faltantes de ruta"
+              parent="point_of_sale.menu_point_rep"
+              action="action_helados_faltante"
+              groups="point_of_sale.group_pos_manager"
+              sequence="50"/>
+</odoo>
