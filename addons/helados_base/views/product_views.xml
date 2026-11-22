@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- HU01 escenario 3: consultar el catálogo con los saldos en la Cava -->
+    <record id="product_catalogo_cava_list" model="ir.ui.view">
+        <field name="name">product.product.catalogo.cava.list</field>
+        <field name="model">product.product</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Catálogo en Cava" create="false" default_order="default_code">
+                <field name="default_code" string="Código"/>
+                <field name="name" string="Nombre"/>
+                <field name="categ_id" string="Categoría"/>
+                <field name="list_price" string="Precio"/>
+                <field name="qty_cava" sum="Total en Cava"/>
+                <field name="qty_available" string="Total almacén" optional="hide"/>
+                <field name="uom_id" string="Unidad" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_catalogo_cava" model="ir.actions.act_window">
+        <field name="name">Catálogo en Cava</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('product_catalogo_cava_list')})]"/>
+        <field name="domain">[('is_storable', '=', True)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aún no hay productos en el catálogo</p>
+            <p>Use <b>Inventario &gt; Productos &gt; Registrar producto</b> para cargar un producto con su stock inicial.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_helados_registrar_producto"
+              name="Registrar producto"
+              parent="stock.menu_stock_inventory_control"
+              action="action_helados_registrar_producto"
+              groups="stock.group_stock_manager"
+              sequence="90"/>
+
+    <menuitem id="menu_helados_catalogo_cava"
+              name="Catálogo en Cava"
+              parent="stock.menu_stock_inventory_control"
+              action="action_catalogo_cava"
+              sequence="91"/>
+</odoo>

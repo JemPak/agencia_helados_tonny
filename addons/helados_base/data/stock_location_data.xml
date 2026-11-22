@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Activar "Ubicaciones de almacenamiento" para todos los usuarios internos
+         (equivale a marcarlo en Inventario > Ajustes). -->
+    <record id="base.group_user" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('stock.group_stock_multi_locations'))]"/>
+    </record>
+
+    <!-- Solo al instalar: crea Cava, Local y Vehículos (Camión, Moto 1, Moto 2). -->
+    <data noupdate="1">
+        <function model="stock.warehouse" name="_helados_configurar_ubicaciones"/>
+    </data>
+</odoo>

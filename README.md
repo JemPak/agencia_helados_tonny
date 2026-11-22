@@ -75,7 +75,34 @@ Abrir <http://localhost:8069> y crear la base de datos:
 - País: **Colombia** · Idioma: **Español (CO)**
 - Contraseña maestra: la de `admin_passwd` en `config/odoo.conf`
 
-Luego instalar las aplicaciones **Inventario**, **Compras**, **Ventas** y **Punto de Venta**.
+Luego, en **Aplicaciones**, quitar el filtro "Aplicaciones" y buscar e instalar **Agencia de Helados – Base**
+(`helados_base`). Instala Inventario como dependencia y deja configuradas las ubicaciones y las categorías.
+
+Si la base se creó con **datos de demostración**, también se carga un catálogo de ejemplo
+(nombres, precios y cantidades inventados) con stock en la Cava.
+
+## Módulos propios
+
+### `helados_base` – HU01 Ubicaciones y catálogo de productos
+
+| Criterio de aceptación | Implementación |
+|------------------------|----------------|
+| Ubicaciones de la agencia | Al instalar, la ubicación de stock del almacén pasa a llamarse **Cava** y se crean **Local** y **Vehículos → Camión, Moto 1, Moto 2**. Se activa "Ubicaciones de almacenamiento". |
+| E1 – Registrar producto con stock inicial | *Inventario → Productos → Registrar producto*: código, nombre, categoría, precio y cantidad. Crea el producto, aplica el ajuste de inventario en la Cava y muestra "Producto guardado correctamente". |
+| E2 – Validar duplicados, negativos y obligatorios | Código único (sin distinguir mayúsculas/espacios, incluye archivados) también desde el formulario estándar de producto; precio y cantidad contada no negativos; campos obligatorios resaltados en rojo. |
+| E3 – Consultar catálogo con saldos | *Inventario → Productos → Catálogo en Cava*: código, nombre, categoría, precio y cantidad **solo en la Cava** (no suma Local ni vehículos). |
+
+Categorías creadas: *Helados Tonny* → Conos, Paletas, Galletas, Vasos, Helado por litro.
+
+## Pruebas
+
+Las pruebas de aceptación corren en una base temporal:
+
+```bash
+docker compose run --rm odoo odoo -d pruebas -i helados_base \
+  --test-enable --test-tags /helados_base --stop-after-init
+docker compose exec db dropdb -U odoo pruebas
+```
 
 ### Comandos útiles
 
@@ -90,7 +117,8 @@ docker compose down -v           # detener y BORRAR los datos
 
 ```
 .
-├── addons/                 # módulos propios o de terceros (vacío por ahora)
+├── addons/
+│   └── helados_base/       # HU01: ubicaciones y catálogo (models, wizard, views, data, demo, tests)
 ├── config/
 │   └── odoo.conf.example   # plantilla de configuración de Odoo
 ├── docker-compose.yml
@@ -102,7 +130,7 @@ docker compose down -v           # detener y BORRAR los datos
 
 - [x] Dockerizar Odoo y PostgreSQL
 - [ ] Crear la base de datos con localización colombiana
-- [ ] HU01 – Ubicaciones y catálogo de productos
+- [x] HU01 – Ubicaciones y catálogo de productos (`helados_base`)
 - [ ] HU02 – Reglas de reabastecimiento y recepciones
 - [ ] HU03 – Pedidos a domicilio y cargue de vehículos
 - [ ] HU04 – Punto de Venta por vehículo y cierre de sesión
