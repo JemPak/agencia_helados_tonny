@@ -1,0 +1,13 @@
+; Copiar a config/odoo.conf. Ese archivo no se sube al repositorio.
+[options]
+addons_path = /mnt/extra-addons
+data_dir = /var/lib/odoo
+
+; Contraseña maestra del gestor de bases de datos (/web/database/manager).
+admin_passwd = cambiar_esta_contrasena_maestra
+
+; Sin filtro, el gestor muestra todas las bases; dejar en .* para desarrollo.
+dbfilter = .*
+
+; Español de Colombia y zona horaria local para los usuarios nuevos se configuran
+; desde Ajustes al crear la base de datos.

@@ -1,0 +1,17 @@
+# Secretos locales
+.env
+config/odoo.conf
+
+# Respaldos de base de datos
+*.dump
+*.sql
+*.zip
+backups/
+
+# Python / editores / sistema
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+.DS_Store
+*:Zone.Identifier
