@@ -75,8 +75,9 @@ Abrir <http://localhost:8069> y crear la base de datos con el nombre **`agencia`
 - País: **Colombia** · Idioma: **Español (CO)**
 - Contraseña maestra: la de `admin_passwd` en `config/odoo.conf`
 
-Luego, en **Aplicaciones**, quitar el filtro "Aplicaciones" y buscar e instalar **Agencia de Helados – Base**
-(`helados_base`). Instala Inventario como dependencia y deja configuradas las ubicaciones y las categorías.
+Luego, en **Aplicaciones**, quitar el filtro "Aplicaciones" y buscar e instalar **Agencia de Helados – Compras**
+(`helados_compras`). Instala también `helados_base`, Inventario, Compras y Contabilidad (con el plan de
+cuentas colombiano `l10n_co`), y deja configuradas ubicaciones, catálogo, proveedor y reglas de reabastecimiento.
 
 Al instalarse se carga el **catálogo inicial de la agencia** (16 productos con precio de compra y de venta).
 Las imágenes se descargan de heladostonny.com en ese momento; si no hay internet, el módulo se instala
@@ -141,15 +142,38 @@ Catálogo inicial (precios en COP, entregados por la agencia):
 
 Las cantidades iniciales quedan en 0 hasta el primer conteo de la Cava.
 
+### `helados_compras` – HU02 Reabastecimiento y recepciones
+
+| Criterio de aceptación | Implementación |
+|------------------------|----------------|
+| Configuración | Proveedor **Helados Tonny S.A.S.** registrado en los 16 productos con su precio de compra, y una **regla de stock mínimo/máximo en la Cava** por producto. La ruta Comprar está activa en el almacén. |
+| E1 – Solicitud automática por stock mínimo | Cada vez que sale producto de la Cava (venta, entrega o cargue a un vehículo), Odoo revisa de inmediato la regla de ese producto. Si el previsto queda bajo el mínimo, crea o completa la **solicitud de presupuesto** a Tonny por la cantidad que falta para el máximo. Lo ya pedido cuenta, así que no duplica pedidos. El planificador diario de Odoo sigue corriendo como respaldo. |
+| E2 – Confirmar orden de compra | *Compras → Solicitudes de presupuesto → Confirmar pedido*: pasa a orden de compra y deja la **recepción pendiente** en la Cava. |
+| E3 – Registrar recepción en la Cava | *Inventario → Recepciones → Validar*: suma a la Cava y guarda fecha, proveedor y el nuevo campo **Validado por** (usuario que recibió). Si llega menos de lo pedido, se crea una recepción pendiente por la diferencia. |
+
+Mínimos y máximos iniciales (unidades del producto). **Son una propuesta, a validar con la agencia**;
+se cambian en *Inventario → Operaciones → Reabastecimiento*:
+
+| Productos | Mínimo | Máximo |
+|-----------|-------:|-------:|
+| Cajas 18 L y 10 L | 2 | 6 |
+| Gran Circus | 20 | 60 |
+| Todos los demás | 3 | 10 |
+
+> Mientras la Cava esté en 0, el planificador diario creará una solicitud de compra con todo el catálogo.
+> Conviene hacer el primer conteo (ajuste de inventario) antes de empezar a usar Compras.
+
 ## Pruebas
 
-Las pruebas de aceptación corren en una base temporal:
+Las pruebas de aceptación de todos los módulos corren en una base temporal que se borra al terminar:
 
 ```bash
-docker compose run --rm odoo odoo -d pruebas -i helados_base \
-  --test-enable --test-tags /helados_base --stop-after-init
-docker compose exec db dropdb -U odoo pruebas
+scripts/test.sh                  # todos los módulos de addons/
+scripts/test.sh helados_compras  # solo uno
 ```
+
+El script detiene el Odoo principal mientras corren (sus tareas programadas chocarían con la base de
+pruebas) y lo vuelve a iniciar al final. Sale con código 0 si no hay fallos.
 
 ### Comandos útiles
 
@@ -165,12 +189,14 @@ docker compose down -v           # ¡detener y BORRAR los datos! (ver Persistenc
 ```
 .
 ├── addons/
-│   └── helados_base/       # HU01: ubicaciones y catálogo (models, wizard, views, data, tests)
+│   ├── helados_base/       # HU01: ubicaciones y catálogo (models, wizard, views, data, tests)
+│   └── helados_compras/    # HU02: proveedor, reabastecimiento y recepciones
 ├── config/
 │   └── odoo.conf.example   # plantilla de configuración de Odoo
 ├── scripts/
 │   ├── backup.sh           # respaldo de base + filestore
-│   └── restore.sh          # restauración de un respaldo
+│   ├── restore.sh          # restauración de un respaldo
+│   └── test.sh             # pruebas de aceptación
 ├── docker-compose.yml
 ├── .env.example            # plantilla de variables de entorno
 └── README.md
@@ -182,7 +208,7 @@ docker compose down -v           # ¡detener y BORRAR los datos! (ver Persistenc
 - [x] Crear la base de datos con localización colombiana
 - [x] Persistencia de datos y scripts de respaldo
 - [x] HU01 – Ubicaciones y catálogo de productos (`helados_base`)
-- [ ] HU02 – Reglas de reabastecimiento y recepciones
+- [x] HU02 – Reglas de reabastecimiento y recepciones (`helados_compras`)
 - [ ] HU03 – Pedidos a domicilio y cargue de vehículos
 - [ ] HU04 – Punto de Venta por vehículo y cierre de sesión
 - [ ] HU05 – Reportes para el gerente

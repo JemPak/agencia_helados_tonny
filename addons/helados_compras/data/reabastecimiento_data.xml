@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Solo al instalar: deja cada producto del catálogo listo para comprarse a
+         Helados Tonny S.A.S. (ruta Comprar + proveedor con su precio de compra)
+         y crea su regla de stock mínimo/máximo en la Cava.
+         Columnas: código, mínimo, máximo (en unidades del producto).
+         VALORES INICIALES PROPUESTOS: ajustarlos con la agencia en
+         Inventario > Configuración > Reglas de reabastecimiento. -->
+    <data noupdate="1">
+        <function model="product.template" name="_helados_configurar_compras">
+            <value eval="ref('helados_compras.partner_helados_tonny')"/>
+            <value eval="[
+                ('LIT-18',  2,  6),
+                ('LIT-10',  2,  6),
+                ('LIT-05',  3, 10),
+                ('CON-BIC', 3, 10),
+                ('CON-KON', 3, 10),
+                ('CON-KMA', 3, 10),
+                ('VAS-JUN', 3, 10),
+                ('VAS-DER', 3, 10),
+                ('VAS-GCI', 20, 60),
+                ('GAL-GAL', 3, 10),
+                ('PAL-VAL', 3, 10),
+                ('PAL-IRI', 3, 10),
+                ('PAL-CHO', 3, 10),
+                ('TUR-TUR', 3, 10),
+                ('TUR-TCI', 3, 10),
+                ('TUR-CRE', 3, 10),
+            ]"/>
+        </function>
+    </data>
+</odoo>

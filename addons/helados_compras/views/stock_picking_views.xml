@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_validado_por" model="ir.ui.view">
+        <field name="name">stock.picking.form.validado.por</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <field name="date_done" position="after">
+                <field name="validado_por_id" invisible="state != 'done'"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="vpicktree_validado_por" model="ir.ui.view">
+        <field name="name">stock.picking.list.validado.por</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <field name="date_done" position="after">
+                <field name="validado_por_id" optional="show"/>
+            </field>
+        </field>
+    </record>
+</odoo>

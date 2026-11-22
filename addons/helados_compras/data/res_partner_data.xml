@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="partner_helados_tonny" model="res.partner">
+        <field name="name">Helados Tonny S.A.S.</field>
+        <field name="is_company" eval="True"/>
+        <field name="supplier_rank">1</field>
+        <field name="country_id" ref="base.co"/>
+    </record>
+</odoo>
