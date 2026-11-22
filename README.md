@@ -113,6 +113,40 @@ scripts/restore.sh backups/agencia-...  # reemplaza la base 'agencia' con ese re
 
 La carpeta `backups/` no se sube al repositorio.
 
+## Base de demostración (datos simulados)
+
+Para mostrar el sistema con historia (reportes, cierres, compras) sin ensuciar la base real:
+
+```bash
+scripts/simular.sh                          # copia 'agencia' en 'agencia_demo' y simula 28 días
+scripts/simular.sh agencia agencia_demo 14  # origen, destino y número de días
+```
+
+Todo lo que genera es **ficticio** (`scripts/simulacion/simular_operacion.py`). Por cada día hábil (lunes a
+sábado), con el reloj de Odoo puesto en esa fecha:
+
+| Hora | Qué pasa |
+|------|----------|
+| 07:00 | El gerente confirma las solicitudes de compra automáticas a Tonny; el bodeguero recibe las de hace 2 días. |
+| 07:30 | 1 a 3 pedidos a domicilio por vehículo, cargue de pedidos, carga extra para venta en ruta y reposición del Local. |
+| 08:00 | Apertura de cajas con base de $50.000. |
+| 09:00–17:00 | Cobro de los pedidos a domicilio y ventas sueltas (≈35 % facturadas a tiendas). |
+| 18:00 | Devolución de sobrantes (≈15 % con faltantes) y cierre de caja (≈25 % con diferencia; si supera el tope, cierra el gerente). |
+
+El primer día se hace el conteo inicial de la Cava (cada producto en su máximo). La simulación es
+reproducible (semilla fija; se cambia con la variable `SEMILLA`).
+
+Usuarios de demostración (clave **`demo2026`**, solo en `agencia_demo`):
+
+| Usuario | Rol |
+|---------|-----|
+| `gerente.demo` | Gerente: compras, ventas, inventario y Punto de Venta |
+| `bodeguero.demo` | Bodeguero: recepciones y cargues |
+| `vendedora.demo` | Vendedora del Local |
+| `repartidor.camion`, `repartidor.moto1`, `repartidor.moto2` | Repartidores |
+
+Para entrar a la demo, elegir la base `agencia_demo` en <http://localhost:8069/web/database/selector>.
+
 ## Módulos propios
 
 ### `helados_base` – HU01 Ubicaciones y catálogo de productos
@@ -272,7 +306,9 @@ docker compose down -v           # ¡detener y BORRAR los datos! (ver Persistenc
 ├── scripts/
 │   ├── backup.sh           # respaldo de base + filestore
 │   ├── restore.sh          # restauración de un respaldo
-│   └── test.sh             # pruebas de aceptación
+│   ├── test.sh             # pruebas de aceptación
+│   ├── simular.sh          # base de demostración con operación simulada
+│   └── simulacion/         # script de la simulación (datos ficticios)
 ├── docker-compose.yml
 ├── .env.example            # plantilla de variables de entorno
 └── README.md
