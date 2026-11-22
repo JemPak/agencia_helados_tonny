@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_ruta" model="ir.ui.view">
+        <field name="name">stock.picking.form.ruta</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <field name="origin" position="after">
+                <field name="repartidor_id" readonly="1" invisible="not repartidor_id"/>
+                <field name="vehiculo_id" readonly="1" invisible="not vehiculo_id"/>
+                <field name="municipio_entrega" invisible="not municipio_entrega"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="vpicktree_ruta" model="ir.ui.view">
+        <field name="name">stock.picking.list.ruta</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="municipio_entrega" optional="show"/>
+                <field name="repartidor_id" optional="show"/>
+                <field name="vehiculo_id" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_picking_search_ruta" model="ir.ui.view">
+        <field name="name">stock.picking.search.ruta</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="vehiculo_id"/>
+                <field name="repartidor_id"/>
+            </field>
+            <filter name="available" position="after">
+                <filter name="agrupar_vehiculo" string="Vehículo" context="{'group_by': 'vehiculo_id'}"/>
+                <filter name="agrupar_repartidor" string="Repartidor" context="{'group_by': 'repartidor_id'}"/>
+            </filter>
+        </field>
+    </record>
+
+    <!-- Hoja de cargue del día: cargues pendientes agrupados por vehículo -->
+    <record id="action_cargue_vehiculos" model="ir.actions.act_window">
+        <field name="name">Cargue de vehículos</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('picking_type_id.code', '=', 'internal'), ('vehiculo_id', '!=', False)]</field>
+        <field name="context">{'search_default_available': 1, 'search_default_agrupar_vehiculo': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No hay cargues pendientes</p>
+            <p>Los cargues aparecen al confirmar un pedido a domicilio con vehículo asignado.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_cargue_vehiculos"
+              name="Cargue de vehículos"
+              parent="stock.menu_stock_transfers"
+              action="action_cargue_vehiculos"
+              sequence="5"/>
+</odoo>

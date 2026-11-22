@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_ruta" model="ir.ui.view">
+        <field name="name">sale.order.form.ruta</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <field name="payment_term_id" position="after">
+                <field name="municipio_entrega"/>
+                <field name="repartidor_id" options="{'no_create': True}"/>
+                <field name="vehiculo_id" options="{'no_create': True}"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_order_tree_ruta" model="ir.ui.view">
+        <field name="name">sale.order.list.ruta</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="municipio_entrega" optional="show"/>
+                <field name="repartidor_id" optional="show"/>
+                <field name="vehiculo_id" optional="show"/>
+            </field>
+        </field>
+    </record>
+</odoo>

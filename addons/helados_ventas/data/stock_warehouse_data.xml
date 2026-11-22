@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Solo al instalar: entregas en dos pasos, Cargue (Cava -> vehículo) y
+         Entrega (vehículo -> cliente). Así la mercancía sale de la Cava una sola
+         vez y el pedido queda trazado hasta el cliente. -->
+    <data noupdate="1">
+        <function model="stock.warehouse" name="_helados_configurar_entregas"/>
+    </data>
+</odoo>

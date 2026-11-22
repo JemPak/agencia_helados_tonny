@@ -28,14 +28,18 @@ El backlog detallado, con los criterios de aceptación, está en el documento de
 ### Modelo de ubicaciones
 
 ```
-Almacén
-├── Cava (bodega refrigerada)
+Almacén (WH)
+├── Cava (bodega refrigerada, stock principal)
 ├── Local (venta al detal)
-└── Vehículos
-    ├── Camión (punto móvil)
-    ├── Moto 1
-    └── Moto 2
+└── Salida
+    └── Vehículos
+        ├── Camión (punto móvil)
+        ├── Moto 1
+        └── Moto 2
 ```
+
+Los vehículos están dentro de *Salida* para que Odoo aplique su regla estándar Salida → Cliente
+al despachar desde cualquiera de ellos (ver HU03).
 
 ## Arquitectura
 
@@ -75,9 +79,11 @@ Abrir <http://localhost:8069> y crear la base de datos con el nombre **`agencia`
 - País: **Colombia** · Idioma: **Español (CO)**
 - Contraseña maestra: la de `admin_passwd` en `config/odoo.conf`
 
-Luego, en **Aplicaciones**, quitar el filtro "Aplicaciones" y buscar e instalar **Agencia de Helados – Compras**
-(`helados_compras`). Instala también `helados_base`, Inventario, Compras y Contabilidad (con el plan de
-cuentas colombiano `l10n_co`), y deja configuradas ubicaciones, catálogo, proveedor y reglas de reabastecimiento.
+Luego, en **Aplicaciones**, quitar el filtro "Aplicaciones" y buscar e instalar:
+
+1. **Agencia de Helados – Compras** (`helados_compras`): instala también `helados_base`, Inventario, Compras y
+   Contabilidad (con el plan de cuentas colombiano `l10n_co`).
+2. **Agencia de Helados – Pedidos y rutas** (`helados_ventas`): instala Ventas.
 
 Al instalarse se carga el **catálogo inicial de la agencia** (16 productos con precio de compra y de venta).
 Las imágenes se descargan de heladostonny.com en ese momento; si no hay internet, el módulo se instala
@@ -163,6 +169,26 @@ se cambian en *Inventario → Operaciones → Reabastecimiento*:
 > Mientras la Cava esté en 0, el planificador diario creará una solicitud de compra con todo el catálogo.
 > Conviene hacer el primer conteo (ajuste de inventario) antes de empezar a usar Compras.
 
+### `helados_ventas` – HU03 Pedidos a domicilio y traslado a ruta
+
+El pedido a domicilio se despacha en **dos pasos** (entregas en 2 pasos del almacén), así cada unidad
+sale de la Cava una sola vez y queda trazada hasta el cliente:
+
+```
+Pedido de venta ──confirmar──▶ Cargue de vehículo ──validar──▶ Entrega a domicilio ──validar──▶ Cliente
+                               Cava → Camión/Moto              Camión/Moto → Cliente
+                               (bodeguero)                     (repartidor, HU04)
+```
+
+| Criterio de aceptación | Implementación |
+|------------------------|----------------|
+| E1 – Crear pedido y reservar en la Cava | Al confirmar el pedido, Odoo **reserva** las unidades en la Cava (siguen ahí, pero ya no están libres) y crea el **cargue**. El pedido tiene los campos **Repartidor**, **Vehículo** y **Municipio de entrega** (ciudad de la dirección de entrega). Repartidor y vehículo se pueden asignar o cambiar hasta que se haga el cargue. |
+| E2 – Falta de stock en la Cava | Al digitar una cantidad mayor a la libre en la Cava aparece una **advertencia**. Además, el pedido **no se puede confirmar** si algún producto supera lo libre (cuenta lo ya reservado por otros pedidos y suma líneas repetidas), según la regla de negocio de no vender sin existencias. |
+| E3 – Cargue al vehículo | *Inventario → Operaciones → Cargue de vehículos* muestra los cargues listos agrupados por vehículo. Al validarlo, la mercancía sale de la Cava y entra al vehículo, y Odoo crea la **entrega** desde ese vehículo con el mismo repartidor. No se puede validar un cargue sin vehículo ni cambiar el vehículo de un pedido ya cargado. |
+
+Además se activó *Transferencias internas* para cargar mercancía extra a un vehículo (venta en ruta sin
+pedido) y, en la HU04, devolver los sobrantes a la Cava.
+
 ## Pruebas
 
 Las pruebas de aceptación de todos los módulos corren en una base temporal que se borra al terminar:
@@ -190,7 +216,8 @@ docker compose down -v           # ¡detener y BORRAR los datos! (ver Persistenc
 .
 ├── addons/
 │   ├── helados_base/       # HU01: ubicaciones y catálogo (models, wizard, views, data, tests)
-│   └── helados_compras/    # HU02: proveedor, reabastecimiento y recepciones
+│   ├── helados_compras/    # HU02: proveedor, reabastecimiento y recepciones
+│   └── helados_ventas/     # HU03: pedidos a domicilio, repartidor/vehículo y cargue
 ├── config/
 │   └── odoo.conf.example   # plantilla de configuración de Odoo
 ├── scripts/
@@ -209,7 +236,7 @@ docker compose down -v           # ¡detener y BORRAR los datos! (ver Persistenc
 - [x] Persistencia de datos y scripts de respaldo
 - [x] HU01 – Ubicaciones y catálogo de productos (`helados_base`)
 - [x] HU02 – Reglas de reabastecimiento y recepciones (`helados_compras`)
-- [ ] HU03 – Pedidos a domicilio y cargue de vehículos
+- [x] HU03 – Pedidos a domicilio y cargue de vehículos (`helados_ventas`)
 - [ ] HU04 – Punto de Venta por vehículo y cierre de sesión
 - [ ] HU05 – Reportes para el gerente
 - [ ] Guion de pruebas de aceptación
